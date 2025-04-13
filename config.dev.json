@@ -2,18 +2,18 @@
   "facebookAccount": {
     "email": "yelegilbertevariste@gmail.com",
     "password": "yamada",
-    "2FASecret": "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", // Clé 2FA générée
-    "i_user": "100000000000001", // ID utilisateur Facebook
-    "proxy": "http://user:pass@proxy.example.com:8080", // Proxy optionnel
+    "2FASecret": "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+    "i_user": "100000000000001",
+    "proxy": "http://user:pass@proxy.example.com:8080",
     "userAgent": "Mozilla/5.0 (Linux; Android 12; M2102J20SG) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Mobile Safari/537.36",
     "intervalGetNewCookie": 1440,
     "notes": "Intervalle en minutes pour rafraîchir les cookies (1440 = 1 jour)"
   },
-  "antiInbox": true, // Activer la protection contre le spam
-  "language": "fr", // Changé en français
+  "antiInbox": true,
+  "language": "fr",
   "adminOnly": {
-    "enable": true, // Mode admin-only activé
-    "ignoreCommand": ["help", "ping"] // Commandes accessibles à tous
+    "enable": true,
+    "ignoreCommand": ["help", "ping"]
   },
   "adminBot": [
     "100093009031914",
@@ -31,14 +31,14 @@
     "autoSyncWhenStart": true,
     "autoRefreshThreadInfoFirstTime": true
   },
-  "timeZone": "Europe/Paris", // Changé pour la France
+  "timeZone": "Europe/Paris",
   "credentials": {
     "gmailAccount": {
       "email": "romeobot555@gmail.com",
       "clientId": "695328982889-v1t85ej9aq1fvv0n4alp7rcbea9gkgvf.apps.googleusercontent.com",
       "clientSecret": "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",
       "refreshToken": "1//04EyH1gbNUVv5CgYIARAAGAQSNwF-L9IrqcPCQD2QsuhCQ2XprHCTMrTnVPI6WvT9i73nnoi4XqfAD0_yDoGW_gtWUdIeVtANzao",
-      "apiKey": "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ0123456" // Clé API Google ajoutée
+      "apiKey": "AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ0123456" 
     },
     "gRecaptcha": {
       "siteKey": "6Lff7Y0mAAAAALiv3IBkCCOfCdEsN-lK-jtR5FCm",
@@ -47,26 +47,26 @@
   },
   "dashBoard": {
     "enable": true,
-    "expireVerifyCode": 300000, // 5 minutes
+    "expireVerifyCode": 300000,
     "port": 3001,
-    "secretKey": "votre_clé_secrète_32_caractères" // Clé de sécurité ajoutée
+    "secretKey": "votre_clé_secrète_32_caractères"
   },
   "serverUptime": {
     "enable": true,
-    "port": 3002, // Changé pour éviter les conflits
+    "port": 3002,
     "socket": {
       "enable": true,
       "channelName": "botStatus",
-      "verifyToken": "token_secure_123456" // Token ajouté
+      "verifyToken": "token_secure_123456"
     }
   },
   "autoRestart": {
-    "time": "0 3 * * *", // Redémarrage quotidien à 3h
+    "time": "0 3 * * *",
     "notes": "Utilise la syntaxe cron pour planifier les redémarrages"
   },
   "autoUptime": {
     "enable": true,
-    "timeInterval": 300, // 5 minutes
+    "timeInterval": 300,
     "url": "https://votre-bot.example.com/healthcheck"
   },
   "autoLoadScripts": {
@@ -76,7 +76,7 @@
   },
   "security": {
     "maxLoginAttempts": 5,
-    "blockDuration": 3600000 // 1 heure en ms
+    "blockDuration": 3600000
   },
   "notiWhenListenMqttError": {
     "gmail": {
@@ -90,11 +90,11 @@
     }
   },
   "logEvents": {
-    "message_unsend": false // Désactivé pour la vie privée
+    "message_unsend": false 
   },
   "backup": {
     "enable": true,
-    "interval": 86400, // 24 heures
+    "interval": 86400,
     "maxFiles": 7,
     "cloud": {
       "googleDrive": true,
