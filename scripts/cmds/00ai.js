@@ -22,7 +22,8 @@ const rolePlay = "quand tu répond à cette question ajoutes des emojis convenab
 const Prefixes = [
   'ae',
   'ai',
-  'mitama',
+  'evariste',
+  'salut',
 ];
 
 module.exports = {
@@ -56,7 +57,7 @@ api.setMessageReaction("📚", event.messageID, () => {}, true);
       const senderName = senderInfo[senderID].name;
       const response = await axios.get(`https://sandipbaruwal.onrender.com/gemini?prompt=${encodeURIComponent(rolePlay + prompt)}`);
       const answer = `📚 𝐄𝐕𝐀𝐑𝐈𝐒𝐓𝐄 📚 :\n\n${response.data.answer} `;
-api.setMessageReaction("🌱", event.messageID, () => {}, true);
+api.setMessageReaction("👀", event.messageID, () => {}, true);
 
       //apply const font to each letter in the answer
       let formattedAnswer = "";
