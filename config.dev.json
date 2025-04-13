@@ -1,7 +1,7 @@
 {
   "facebookAccount": {
-    "email": "yelegilbertevariste@gmail.com",
-    "password": "yamada",
+    "email": "",
+    "password": "",
     "2FASecret": "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
     "i_user": "100093009031914",
     "proxy": "http://user:pass@proxy.example.com:8080",
