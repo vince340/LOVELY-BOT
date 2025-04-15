@@ -4,7 +4,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "topmoney",
-    version: "1.0",
+    version: "1.1", // version mise à jour
     author: "Evariste",
     role: 0,
     shortDescription: "Voir le classement des plus riches",
@@ -24,13 +24,13 @@ module.exports = {
       const data = JSON.parse(rawData);
 
       const sorted = data.sort((a, b) => b.money - a.money);
-      const top = sorted.slice(0, 10);
+      const top = sorted.slice(0, 20); // On prend les 20 premiers
 
       const lines = top.map((user, index) => 
         `${index + 1}. ${user.name} - ${user.money} $`
       );
 
-      return message.reply(`🏆 Top des plus riches :\n\n${lines.join("\n")}`);
+      return message.reply(`🏆 Top 20 des plus riches :\n\n${lines.join("\n")}`);
     } catch (err) {
       console.error(err);
       return message.reply("❌ Erreur lors de l'affichage du classement.");
