@@ -1,0 +1,21 @@
+module.exports = {
+  config: {
+    name: "autodelete",
+    version: "1.0",
+    author: "Evariste",
+    role: 0,
+    shortDescription: "Message auto-supprimé",
+    longDescription: "Envoie un message qui se supprime après 30 minutes",
+    category: "utils",
+    guide: "{pn}"
+  },
+
+  onStart: async function ({ message }) {
+    const msg = await message.reply("Ce message s'autodétruira dans 30 minutes.");
+
+    // Supprimer après 30 minutes (30 * 60 * 1000 ms)
+    setTimeout(() => {
+      message.unsend(msg.messageID);
+    }, 30 * 60 * 1000);
+  }
+};
