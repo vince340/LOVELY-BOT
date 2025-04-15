@@ -6,7 +6,7 @@ module.exports = {
     name: "saveusers",
     version: "1.1",
     author: "Evariste",
-    role: 1,
+    role: 0, // Accessible à tous
     shortDescription: "Sauvegarder argent utilisateurs",
     longDescription: "Enregistre le nom et l'argent de chaque utilisateur",
     category: "economy",
