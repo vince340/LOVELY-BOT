@@ -1,0 +1,40 @@
+module.exports = {
+  config: {
+    name: "clearbot",
+    version: "1.0",
+    author: "Evariste",
+    role: 0,
+    shortDescription: "Supprime les messages du bot",
+    longDescription: "Supprime tous les messages envoyés par le bot dans la conversation",
+    category: "utils",
+    guide: "{pn}"
+  },
+
+  onStart: async function ({ message, api, event }) {
+    try {
+      const threadID = event.threadID;
+      const botID = api.getCurrentUserID();
+
+      // Récupérer les 100 derniers messages (ou plus si tu veux)
+      api.getThreadHistory(threadID, 100, null, async (err, history) => {
+        if (err) return message.reply("❌ Erreur lors de la récupération des messages.");
+
+        const botMessages = history.filter(msg => msg.senderID === botID);
+
+        for (const msg of botMessages) {
+          try {
+            await api.unsendMessage(msg.messageID);
+          } catch (err) {
+            console.log(`Erreur en supprimant le message ${msg.messageID}`);
+          }
+        }
+
+        return message.reply(`✅ ${botMessages.length} message(s) du bot supprimé(s).`);
+      });
+
+    } catch (err) {
+      console.error(err);
+      return message.reply("❌ Une erreur est survenue.");
+    }
+  }
+};
