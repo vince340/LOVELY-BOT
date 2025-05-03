@@ -12,35 +12,42 @@ module.exports = {
     }
   },
 
-  onStart: async function ({ message, event }) {
-    if (!event.isGroup) return message.reply("Ce jeu peut seulement être lancé dans un groupe.");
-
+  onStart: async function ({ message, event, threadsData, commandName }) {
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const lettre = alphabet[Math.floor(Math.random() * alphabet.length)];
 
+    // Sauvegarde la lettre dans une mémoire temporaire globale
     global.motRapide = global.motRapide || {};
     global.motRapide[event.threadID] = {
       lettre: lettre,
       active: true
     };
 
-    return message.reply(`**Jeu du Mot Rapide !**\nLa lettre est : **${lettre}**\nEnvoyez un mot qui commence par cette lettre pour gagner **100 $** !`);
+    return message.reply(`**Jeu du Mot Rapide !**\nLa lettre est : **${lettre}**\nPremier à envoyer un mot qui commence par cette lettre gagne **100 $** !`);
   },
 
-  onMessage: async function ({ message, event, usersData }) {
-    const { threadID, body, senderID } = event;
-    if (!body || !global.motRapide || !global.motRapide[threadID] || !global.motRapide[threadID].active) return;
+  onChat: async function ({ message, event, usersData, api }) {
+    const threadID = event.threadID;
+    const content = event.body?.trim();
+
+    // Vérifie si une partie est active
+    if (!global.motRapide || !global.motRapide[threadID] || !global.motRapide[threadID].active) return;
 
     const lettre = global.motRapide[threadID].lettre;
-    if (body[0].toUpperCase() !== lettre) return;
+    if (!content || content[0].toUpperCase() !== lettre) return;
 
+    // Fin de la partie
     global.motRapide[threadID].active = false;
 
     const gain = 100;
-    const currentMoney = await usersData.get(senderID, "money") || 0;
-    await usersData.set(senderID, currentMoney + gain, "money");
+    const userID = event.senderID;
+    const currentMoney = await usersData.get(userID, "money") || 0;
+    await usersData.set(userID, currentMoney + gain, "money");
 
-    const name = await global.utils.getName(senderID);
-    return message.reply(`Bravo ${name} ! Tu as gagné avec **"${body}"** et tu gagnes **${gain} $** !`);
+    // Récupérer le nom de l'utilisateur
+    const userInfo = await api.getUserInfo(userID);
+    const userName = userInfo[userID]?.name || "un utilisateur";
+
+    return message.reply(`Bravo ${userName} ! Tu as gagné avec **"${content}"** et tu remportes ${gain} $ !`);
   }
-}
+};
