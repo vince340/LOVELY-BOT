@@ -3,24 +3,40 @@ const path = require("path");
 
 module.exports = {
   config: {
-    name: "save",
-    version: "1.0",
-    author: "ChatGPT",
-    shortDescription: "Sauvegarde manuelle des données utilisateurs",
-    category: "admin",
-    guide: "{p}save"
+    name: "saveusers",
+    version: "1.1",
+    author: "Evariste",
+    role: 1,
+    shortDescription: "Sauvegarder argent utilisateurs",
+    longDescription: "Enregistre le nom et l'argent de chaque utilisateur",
+    category: "economy",
+    guide: "{pn}"
   },
 
-  onStart: async function ({ api, event, usersData }) {
-    const adminUID = "100093009031914";
-    if (event.senderID !== adminUID)
-      return api.sendMessage("Tu n'es pas autorisé à utiliser cette commande.", event.threadID);
+  onStart: async function ({ message, usersData }) {
+    try {
+      const allIDs = await usersData.getAll(); // get all users
+      const data = [];
 
-    const allUsers = await usersData.getAll();
+      for (const user of allIDs) {
+        const uid = user.userID;
+        const name = await usersData.getName(uid);
+        const money = await usersData.get(uid, "money") || 0;
 
-    const filePath = path.join(__dirname, "backup_users.json");
-    fs.writeFileSync(filePath, JSON.stringify(allUsers, null, 2));
+        data.push({
+          id: uid,
+          name: name || "Inconnu",
+          money: money
+        });
+      }
 
-    api.sendMessage("✅ Données utilisateurs sauvegardées avec succès dans `backup_users.json`.", event.threadID);
+      const filePath = path.join(__dirname, "userMoney.json");
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+      return message.reply("✅ Données enregistrées avec succès.");
+    } catch (err) {
+      console.error(err);
+      return message.reply("❌ Une erreur s'est produite lors de l'enregistrement.");
+    }
   }
-}
+};
