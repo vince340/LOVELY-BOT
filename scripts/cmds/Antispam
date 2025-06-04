@@ -1,110 +1,68 @@
 module.exports = {
   config: {
     name: "antispam",
-    version: "3.1",
-    author: "Samir & Evariste",
-    description: "Anti-spam avec suppression et expulsion automatique",
+    version: "1.0",
+    author: "Evariste ᎬᏉᎯᏒᎨᏕᎿᎬ",
+    description: "Supprime automatiquement les spammeurs qui envoient de longs messages",
     usage: "[on/off/status]",
     cooldown: 5,
     permissions: [2],
-    credits: "Équipe GoatBot + Evariste"
   },
 
-  // ➕ COMMANDE MANUELLE
-  onStart: async function({ api, event, args, threadsData }) {
+  onStart: async function ({ api, event, args, threadsData }) {
     const { threadID, messageID, senderID } = event;
     const botAdmins = global.GoatBot.config?.adminBot || [];
-
     if (!botAdmins.includes(senderID)) {
-      return api.sendMessage(
-        "🔒 Seuls les admins du bot peuvent utiliser cette commande.",
-        threadID, messageID
-      );
+      return api.sendMessage("🔒 Seuls les administrateurs du bot peuvent activer l’anti-spam.", threadID, messageID);
     }
 
-    const currentStatus = await threadsData.get(threadID, "antiSpam") || false;
     const action = args[0]?.toLowerCase();
+    const current = await threadsData.get(threadID, "antiSpamActive") || false;
 
-    if (!action) {
+    if (!action || action === "status") {
       return api.sendMessage(
-        `🛡️ État anti-spam : ${currentStatus ? "ACTIF" : "INACTIF"}\n` +
-        `Détection :\n• Messages > 100 caractères\n• Texte en MAJUSCULES (>70%)\n\n` +
-        `Utilisation : /antispam [on|off|status]`,
-        threadID, messageID
+        `🛡️ Anti-spam : ${current ? "ACTIF" : "INACTIF"}\n• Supprime les messages > 100 caractères\n\nUtilisation : /antispam on | off | status`,
+        threadID,
+        messageID
       );
     }
 
     if (action === "on") {
-      if (currentStatus) return api.sendMessage("ℹ️ Déjà activé.", threadID, messageID);
-      await threadsData.set(threadID, true, "antiSpam");
-      return api.sendMessage("✅ Anti-spam ACTIVÉ.", threadID, messageID);
+      await threadsData.set(threadID, true, "antiSpamActive");
+      return api.sendMessage("✅ Anti-spam ACTIVÉ\nLes spammeurs seront supprimés automatiquement.\n\nᎬᏉᎯᏒᎨᏕᎿᎬ", threadID, messageID);
     }
 
     if (action === "off") {
-      if (!currentStatus) return api.sendMessage("ℹ️ Déjà désactivé.", threadID, messageID);
-      await threadsData.set(threadID, false, "antiSpam");
-      return api.sendMessage("❌ Anti-spam DÉSACTIVÉ.", threadID, messageID);
+      await threadsData.set(threadID, false, "antiSpamActive");
+      return api.sendMessage("❌ Anti-spam DÉSACTIVÉ\nAucune suppression automatique.\n\nᎬᏉᎯᏒᎨᏕᎿᎬ", threadID, messageID);
     }
 
-    if (action === "status") {
-      return api.sendMessage(
-        `📊 Anti-spam : ${currentStatus ? "ACTIF" : "INACTIF"}\n` +
-        `Mise à jour : ${new Date().toLocaleString()}`,
-        threadID, messageID
-      );
-    }
-
-    return api.sendMessage("❌ Utilisation : /antispam [on|off|status]", threadID, messageID);
+    return api.sendMessage("❓ Utilisation : /antispam [on|off|status]", threadID, messageID);
   },
 
-  // 🔥 TRAITEMENT AUTOMATIQUE
-  onEvent: async function({ api, event, threadsData }) {
-    const { threadID, senderID, messageID, body } = event;
+  onEvent: async function ({ api, event, threadsData }) {
+    const { threadID, senderID, body } = event;
 
-    // Filtrage : si pas de texte → on ignore
-    if (!body || typeof body !== "string" || body.trim().length === 0) return;
+    if (!body || typeof body !== "string") return;
 
-    // Vérifie si activé
-    const isEnabled = await threadsData.get(threadID, "antiSpam");
-    if (!isEnabled) return;
+    const isActive = await threadsData.get(threadID, "antiSpamActive");
+    if (!isActive) return;
 
-    // Paramètres anti-spam
-    const MAX_LENGTH = 100;
-    const CAPS_THRESHOLD = 0.7;
+    const botAdmins = global.GoatBot.config?.adminBot || [];
+    if (botAdmins.includes(senderID)) return;
 
-    const trimmedBody = body.trim();
-    const bodyLength = trimmedBody.length;
-    const uppercaseCount = (trimmedBody.match(/[A-Z]/g) || []).length;
-    const capsRatio = uppercaseCount / bodyLength;
+    const isLongMessage = body.length > 100;
 
-    const isTooLong = bodyLength > MAX_LENGTH;
-    const isCapsAbuse = capsRatio > CAPS_THRESHOLD;
-
-    if (!isTooLong && !isCapsAbuse) return; // Aucun spam détecté
-
-    try {
-      await api.unsendMessage(messageID); // Supprime le message
-
-      // Vérifie si le bot est admin pour expulser
-      const threadInfo = await api.getThreadInfo(threadID);
-      const botID = api.getCurrentUserID();
-      const botIsAdmin = threadInfo.adminIDs.some(e => e.id === botID);
-
-      if (botIsAdmin) {
+    if (isLongMessage) {
+      try {
         await api.removeUserFromGroup(senderID, threadID);
-        return api.sendMessage(
-          `🚫 Utilisateur expulsé pour SPAM\nMotif : ${isTooLong ? "Message trop long" : "Trop de majuscules"}\n🔐 Système anti-spam d’Evariste`,
+        await api.sendMessage(
+          `🚫 Un utilisateur a été supprimé pour avoir envoyé un message trop long !\nSigné : ᎬᏉᎯᏒᎨᏕᎿᎬ`,
           threadID
         );
-      } else {
-        return api.sendMessage(
-          `⚠️ Spam détecté : message supprimé\n🔐 Système anti-spam d’Evariste (le bot n'est pas admin)`,
-          threadID
-        );
+      } catch (err) {
+        console.error("Erreur lors de la suppression du spammeur :", err);
       }
-
-    } catch (err) {
-      console.error("Erreur anti-spam :", err);
     }
   }
 };
