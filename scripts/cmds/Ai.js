@@ -20,10 +20,10 @@ const stickers = [
 const rolePlay = "quand tu répond à cette question ajoutes des emojis convenable :\n\n";
 
 const Prefixes = [
-  'ae',
+  'reine du meta',
   'ai',
-  'mitama',
-  'Evariste',
+  'evariste2',
+  'yamada',
 ];
 
 module.exports = {
@@ -56,7 +56,7 @@ api.setMessageReaction("📚", event.messageID, () => {}, true);
       const senderInfo = await api.getUserInfo([senderID]);
       const senderName = senderInfo[senderID].name;
       const response = await axios.get(`https://sandipbaruwal.onrender.com/gemini?prompt=${encodeURIComponent(rolePlay + prompt)}`);
-      const answer = `📚 𝐄𝐕𝐀𝐑𝐈𝐒𝐓𝐄 📚 :\n\n${response.data.answer} `;
+      const answer = `📚 𝐘𝐀𝐌𝐀𝐃𝐀𝐁𝐎𝐓 📚 :\n\n${response.data.answer} `;
 api.setMessageReaction("🥒", event.messageID, () => {}, true);
 
       //apply const font to each letter in the answer
