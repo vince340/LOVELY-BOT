@@ -1,4 +1,4 @@
-/cmd install Antiadmin.js module.exports = {
+module.exports = {
   config: {
     name: "detectadmin",
     version: "2.0",
