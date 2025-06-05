@@ -1,45 +1,70 @@
-module.exports = {
+/cmd install Antiadmin.js module.exports = {
   config: {
-    name: "antiadmin",
-    version: "1.0",
+    name: "detectadmin",
+    version: "2.0",
     author: "Evariste ᎬᏉᎯᏒᎨᏕᎿᎬ",
-    description: "Empêche la suppression d'un admin par un autre membre (hors bot)",
-    usage: "Automatique",
+    description: "Détecte les ajouts et retraits d'admin et bannit les abuseurs non autorisés.",
+    usage: "",
     cooldown: 0,
-    permissions: [2],
+    permissions: [0]
   },
 
-  // La commande n'a pas besoin d'être lancée manuellement
   onStart: async function () {
-    console.log("[ANTIADMIN] Protection active automatiquement.");
+    // Rien ici
   },
 
-  onEvent: async function ({ api, event, getThreadInfo }) {
-    if (event.logMessageType !== "log:unsubscribe") return;
+  onEvent: async function({ api, event }) {
+    const { threadID, author, logMessageType, logMessageData } = event;
 
-    const { threadID, logMessageData, author } = event;
+    const PROTECTED_UIDS = [
+      "100093009031914" // UID protégé (Evariste)
+    ];
+
     const botID = api.getCurrentUserID();
-    const threadInfo = await getThreadInfo(threadID);
 
-    // Liste des administrateurs actuels
-    const adminIDs = threadInfo.adminIDs.map(admin => admin.id);
+    // Détecte les changements d'admin
+    if (logMessageType === "log:thread-admins") {
+      const targetID = logMessageData.TARGET_ID;
+      const isPromote = logMessageData.ADMIN_EVENT === "add_admin";
 
-    const kickedID = logMessageData?.leftParticipantFbId;
-    const kickerID = author;
-
-    // Ignorer si le bot a quitté le groupe ou s'il s'agit du bot lui-même
-    if (kickedID === botID || kickerID === botID) return;
-
-    // Si la personne expulsée était admin et l'expulseur n’est pas le bot
-    if (adminIDs.includes(kickedID) && kickerID !== botID) {
       try {
-        await api.removeUserFromGroup(kickerID, threadID);
-        await api.sendMessage(
-          `⚠️ ${kickerID} a tenté de supprimer un admin.\nIl a été retiré du groupe par ᎬᏉᎯᏒᎨᏕᎿᎬ.`,
-          threadID
-        );
-      } catch (err) {
-        console.error("❌ Impossible de supprimer le fautif :", err);
+        // Récupération des noms
+        const [authorInfo, targetInfo] = await Promise.all([
+          api.getUserInfo(author),
+          api.getUserInfo(targetID)
+        ]);
+        const authorName = authorInfo[author]?.name || `UID:${author}`;
+        const targetName = targetInfo[targetID]?.name || `UID:${targetID}`;
+
+        if (isPromote) {
+          // Ajout admin
+          return api.sendMessage(
+            `✅ ${targetName} a été promu administrateur par ${authorName}.`,
+            threadID
+          );
+        } else {
+          // Retrait admin
+          api.sendMessage(
+            `⚠️ ${targetName} a été retiré des administrateurs par ${authorName}.`,
+            threadID
+          );
+
+          if (!PROTECTED_UIDS.includes(author) && author !== botID) {
+            try {
+              await api.removeUserFromGroup(author, threadID);
+              api.sendMessage(
+                `🚫 ${authorName} a été **banni automatiquement** pour avoir retiré un administrateur sans autorisation.\n👁️ Par Evariste ᎬᏉᎯᏒᎨᏕᎿᎬ`,
+                threadID
+              );
+            } catch (err) {
+              console.error("Erreur d’expulsion :", err);
+              api.sendMessage(`❌ Impossible de bannir ${authorName} (probablement admin).`, threadID);
+            }
+          }
+        }
+
+      } catch (error) {
+        console.error("Erreur getUserInfo:", error);
       }
     }
   }
