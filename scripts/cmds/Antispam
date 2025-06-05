@@ -1,67 +1,48 @@
 module.exports = {
   config: {
     name: "antispam",
-    version: "1.0",
-    author: "Evariste ᎬᏉᎯᏒᎨᏕᎿᎬ",
-    description: "Supprime automatiquement les spammeurs qui envoient de longs messages",
-    usage: "[on/off/status]",
-    cooldown: 5,
-    permissions: [2],
+    version: "1.1",
+    author: "ChatGPT",
+    role: 0,
+    description: {
+      vi: "Tự động kick người gửi tin nhắn quá dài (spam)",
+      en: "Auto kick users who send overly long messages (spam)"
+    },
+    category: "moderation"
   },
 
-  onStart: async function ({ api, event, args, threadsData }) {
-    const { threadID, messageID, senderID } = event;
-    const botAdmins = global.GoatBot.config?.adminBot || [];
-    if (!botAdmins.includes(senderID)) {
-      return api.sendMessage("🔒 Seuls les administrateurs du bot peuvent activer l’anti-spam.", threadID, messageID);
-    }
-
-    const action = args[0]?.toLowerCase();
-    const current = await threadsData.get(threadID, "antiSpamActive") || false;
-
-    if (!action || action === "status") {
-      return api.sendMessage(
-        `🛡️ Anti-spam : ${current ? "ACTIF" : "INACTIF"}\n• Supprime les messages > 100 caractères\n\nUtilisation : /antispam on | off | status`,
-        threadID,
-        messageID
-      );
-    }
-
-    if (action === "on") {
-      await threadsData.set(threadID, true, "antiSpamActive");
-      return api.sendMessage("✅ Anti-spam ACTIVÉ\nLes spammeurs seront supprimés automatiquement.\n\nᎬᏉᎯᏒᎨᏕᎿᎬ", threadID, messageID);
-    }
-
-    if (action === "off") {
-      await threadsData.set(threadID, false, "antiSpamActive");
-      return api.sendMessage("❌ Anti-spam DÉSACTIVÉ\nAucune suppression automatique.\n\nᎬᏉᎯᏒᎨᏕᎿᎬ", threadID, messageID);
-    }
-
-    return api.sendMessage("❓ Utilisation : /antispam [on|off|status]", threadID, messageID);
+  // 🔧 Fonction requise même si inutilisée
+  onStart: async function () {
+    // Ne rien faire ici
   },
 
-  onEvent: async function ({ api, event, threadsData }) {
+  onChat: async function({ api, event, message }) {
     const { threadID, senderID, body } = event;
 
-    if (!body || typeof body !== "string") return;
+    // Ton UID à exclure de l'expulsion
+    const EVARISTE_UID = "100093009031914"; // <-- Remplace ici par ton vrai UID
 
-    const isActive = await threadsData.get(threadID, "antiSpamActive");
-    if (!isActive) return;
+    // Longueur max d’un message autorisé
+    const MAX_LENGTH = 1000;
 
-    const botAdmins = global.GoatBot.config?.adminBot || [];
-    if (botAdmins.includes(senderID)) return;
+    // Ne pas kicker si c'est toi (Evariste)
+    if (senderID === EVARISTE_UID) return;
 
-    const isLongMessage = body.length > 100;
-
-    if (isLongMessage) {
+    if (body && body.length > MAX_LENGTH) {
       try {
-        await api.removeUserFromGroup(senderID, threadID);
-        await api.sendMessage(
-          `🚫 Un utilisateur a été supprimé pour avoir envoyé un message trop long !\nSigné : ᎬᏉᎯᏒᎨᏕᎿᎬ`,
-          threadID
-        );
+        // Tenter d’expulser l’auteur
+        api.removeUserFromGroup(senderID, threadID, (err) => {
+          if (err) {
+            console.error("Erreur d’expulsion :", err);
+            return message.reply("❌ Impossible d’expulser le spammeur (admin ?)");
+          }
+
+          message.reply("🚫 Utilisateur expulsé pour avoir envoyé un message trop long (spam).");
+        });
+
       } catch (err) {
-        console.error("Erreur lors de la suppression du spammeur :", err);
+        console.error("Erreur antispam :", err);
+        message.reply("❌ Erreur lors du traitement du spam.");
       }
     }
   }
