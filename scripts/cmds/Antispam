@@ -1,4 +1,4 @@
-module.exports = {
+Module.exports = {
   config: {
     name: "antispam",
     version: "1.1",
