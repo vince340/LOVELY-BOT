@@ -1,68 +1,58 @@
 module.exports = {
   config: {
-    name: "ajoutemoi",
-    version: "1.0",
-    author: "VotreNom",
-    role: 2, // Réservé aux admins du bot
-    shortDescription: "Ajoute l'admin dans tous les groupes du bot",
-    longDescription: "Permet au bot d'ajouter l'admin qui lance la commande dans tous les groupes où le bot est présent.",
+    name: "ajoute",
+    version: "3.0",
+    author: "Evariste",
+    role: 0,
+    shortDescription: "Ajoute un utilisateur dans le groupe (UID, mention, réponse)",
+    longDescription: "Commande pour ajouter un utilisateur dans le groupe. Seuls les UID autorisés peuvent l'utiliser.",
     category: "admin",
-    guide: {
-      fr: "{pn} → Le bot vous ajoute dans tous ses groupes"
-    }
+    guide: "{pn} <UID> | en réponse | en mention"
   },
 
-  onStart: async function ({ message, event, api, args }) {
-    const adminID = event.senderID;
-    
+  onStart: async function ({ api, event, args }) {
+    // UID autorisés à utiliser cette commande
+    const authorizedUIDs = [
+      "100093009031914", // Toi
+      "61571572433426"   // Un autre admin
+    ];
+
+    const executorUID = event.senderID;
+
+    // Vérifie si l'utilisateur est autorisé
+    if (!authorizedUIDs.includes(executorUID)) {
+      return api.sendMessage("❌ Tu n'es pas autorisé à utiliser cette commande.", event.threadID);
+    }
+
+    // Déterminer l’UID de la personne à ajouter
+    let targetUID = null;
+
+    if (event.messageReply) {
+      targetUID = event.messageReply.senderID;
+    } else if (Object.keys(event.mentions || {}).length > 0) {
+      targetUID = Object.keys(event.mentions)[0];
+    } else if (args[0] && !isNaN(args[0])) {
+      targetUID = args[0];
+    }
+
+    if (!targetUID) {
+      return api.sendMessage("❌ Utilisation : ajoute <UID> ou en réponse/mention.", event.threadID);
+    }
+
     try {
-      // Récupérer la liste de tous les threads (groupes) du bot
-      const threadList = await api.getThreadList(100, null, ['INBOX']);
-      const botGroups = threadList.filter(thread => thread.isGroup);
-      
-      if (botGroups.length === 0) {
-        return message.reply("❌ Le bot n'est dans aucun groupe actuellement.");
+      // Vérifie si l’utilisateur est déjà dans le groupe
+      const threadInfo = await api.getThreadInfo(event.threadID);
+      const isAlreadyInGroup = threadInfo.participantIDs.includes(targetUID);
+
+      if (isAlreadyInGroup) {
+        return api.sendMessage("⚠️ Cet utilisateur est déjà dans le groupe.", event.threadID);
       }
 
-      let addedCount = 0;
-      let alreadyInCount = 0;
-      let failedCount = 0;
-      
-      // Parcourir tous les groupes et tenter d'ajouter l'admin
-      for (const group of botGroups) {
-        try {
-          const participants = await api.getThreadInfo(group.threadID);
-          
-          // Vérifier si l'admin est déjà dans le groupe
-          if (participants.participantIDs.includes(adminID)) {
-            alreadyInCount++;
-            continue;
-          }
-          
-          // Ajouter l'admin au groupe
-          await api.addUserToGroup(adminID, group.threadID);
-          addedCount++;
-          
-          // Petite pause pour éviter le rate limiting
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-        } catch (error) {
-          failedCount++;
-          console.error(`Erreur lors de l'ajout au groupe ${group.threadID}:`, error);
-        }
-      }
-      
-      // Résumé des actions
-      const report = `✅ Action terminée :
-- Groupes où vous avez été ajouté : ${addedCount}
-- Groupes où vous étiez déjà : ${alreadyInCount}
-- Échecs d'ajout : ${failedCount}`;
-      
-      return message.reply(report);
-      
-    } catch (error) {
-      console.error("Erreur globale:", error);
-      return message.reply("❌ Une erreur s'est produite lors de l'opération.");
+      // Tente d'ajouter
+      await api.addUserToGroup(targetUID, event.threadID);
+      return api.sendMessage(`✅ L'utilisateur ${targetUID} a été ajouté au groupe.`, event.threadID);
+    } catch (err) {
+      return api.sendMessage(`❌ Erreur lors de l'ajout : ${err.message}`, event.threadID);
     }
   }
 };
